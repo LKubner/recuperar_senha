@@ -23,24 +23,49 @@ $token = bin2hex(random_bytes(50));
 require_once 'PHPMailer/src/PHPMailer.php';
 require_once 'PHPMailer/src/SMTP.php';
 require_once 'PHPMailer/src/Exception.php';
+include 'config.php';
 
 $mail = new PHPMailer(true);
 try {
     //configurações
-    $mail ->Charset = 'UTF-8'; 
-    $mail ->Encoding = 'base64'; 
+    $mail->CharSet = 'UTF-8';
+    $mail->Encoding = 'base64';
     $mail->setLanguage('br'); //
-   // $mail->SMTPDebug = SMTP::DEBUG_OFF; //tIRA AS MENSAGENS DE ERRO
-    $mail->SMTPDebug = SMTP::DEBUG_SERVER;//imprime as mensagens de erro
-    $mail ->isSMTP(); //envia o email usando SMTP
+    // $mail->SMTPDebug = SMTP::DEBUG_OFF; //tIRA AS MENSAGENS DE ERRO
+    $mail->SMTPDebug = SMTP::DEBUG_SERVER; //imprime as mensagens de erro
+    $mail->isSMTP(); //envia o email usando SMTP
     $mail->Host = 'smtp.gmail.com'; //Set the 
-    $Mail->SMTPAuth = true;
-    $mail->Username = 'luciano.2022310952@aluno.iffar.edu.br';
-   // $mail->Pasword = 'bpxijhvtgkpxrfmm';
-   $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; //enable implicit
-   $mail->Port = 587;
-  
+    $mail->SMTPAuth = true;
+    $mail->Username = $config['email'];
+    $mail->Password = $config['senha_email'];
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; //enable implicit
+    $mail->Port = 587;
+    $mail->SMTPOptions = array(
+        'ssl' => array(
+            'verify_peer' => false,
+            'verify_peer_name' => false,
+            'allow_self_signed' => true
+        )
+        );
+
+    //Recipients
+    $mail->setFrom($config['email'], 'Aula de Programação III');
+    $mail->addAddress($usuario['email'], $usuario['nome']); //Add a recipient
+    $mail->addReplyTo($config['email'], 'Aula de Tópicos');
+
+        //content
+    $mail->isHTML(true); //Set email format to HTML
+    $mail->Subject = 'Recuperação de Senha do Sistema';
+    $mail->Body = 'Olá <br>
+    Você solicitou a recuperação da sua conta no nosso sistema.
+        Para isso, clique no link abaixo para realizar a troca de senha: <br>
+        <a href="' . $_SERVER['SERVER_NAME'].'/nova-senha.php=?email=' . $usuario['email'] .'&token='. $token.'">Recuperar Senha</a>
+        <br>
+        Atenciosamente<br>
+            Equipe do sistema...';
+            $mail->send();
+            echo 'Email enviado com sucesso!<br> Confira o seu email.';
 } catch (Exception $e) {
     echo "Não foi possivel enviar o email.
-    Mailer Error: {$mail ->ErrorInfo}";
+    Mailer Error: {$mail->ErrorInfo}";
 }
