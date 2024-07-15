@@ -1,9 +1,8 @@
 <?php
-
-// verificar o email
-//verificar o token
-$email = $_GET['email'];
-$token = $_GET['token'];
+$email = $_POST['email'];
+$token = $_POST['token'];
+$senha = $_POST['senha'];
+$repetirSenha = $_POST['repetirSenha'];
 
 require_once "conexao.php";
 $conexao = conectar();
@@ -27,33 +26,28 @@ if ($recuperar == null) {
     $dataExpiracao = date_add($data_criacao, $UmDia);
     var_dump($data_criacao);
     var_Dump($dataExpiracao);
-}
+
 if ($data > $dataExpiracao) {
     echo "Essa solicitação de recuperação de senha expirou!
     Faça um novo pedido de recuperação de senha!!";
     die();
 }
 
-?>
-<!DOCTYPE html>
-<html lang="en">
+if ($recuperar['usado'] == 1) {
+    echo "Esse pedido de recuperação de senha já foi utilizado anteriormente! para recuperar a senha faça um novo pedido de recuperação de senha";
+    die();
+}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Nova Senha </title>
-</head>
+if ($senha != $repetirSenha) {
+    echo "A senha que voce digitou é diferente da senha que você digitou no repetir senha. Tente novamente!";
+    die();
+}
 
-<body>
-    <form action="salvar_nova_senha.php" method="POST">
-        <input type="hidden" name="email" value="<?= $email ?>">
-        <input type="hidden" name="token" value="<?= $token ?>">
-        Email: <?= $email ?> <br>
-        <?php echo $email ?> <br>
-        <label> Senha: <input type="password" name="senha"></label> <br>
-        <label> Repita a senha: <input type="password" name="repetirSenha"> <br>
-            <input type="submit" value="Salvar nova senha"> <br> </label>
-    </form>
-</body>
+$sql2 = "UPDATE  usuario SET senha='$senha' WHERE email='$email'";
+executarSQL($conexao, $sql2);
+$sql3 = "UPDATE  `recuperar_senha` SET usado=1 WHERE email='$email' AND token='$token'";
+executarSQL($conexao, $sql3);
 
-</html>
+echo "Nova senha alterada com sucesso! faça o login para acessar o sistema.";
+echo "<a href='index.php'> Acessar sistema </a>";
+}
